@@ -52,13 +52,29 @@
             flex-grow: 1;
             cursor: pointer;
         }
+        button {
+            padding: 8px 16px;
+            background-color: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: var(--vscode-button-hoverBackground);
+        }
     </style>
 </head>
 <body>
-    <h3>Instruction</h3>
-    <textarea id="instruction" rows="4" placeholder="Enter instructions here..."></textarea>
     <h3>Files</h3>
     <div id="fileList"></div>
+
+    <h3>Instruction</h3>
+    <textarea id="instruction" rows="4" placeholder="Enter instructions here..."></textarea>
+
+    <button onclick="applyChanges()">Apply</button>
+
     <script>
         const vscode = acquireVsCodeApi();
         const instructionTextarea = document.getElementById('instruction');
@@ -99,16 +115,9 @@
                 fileDiv.appendChild(label);
                 
                 fileDiv.addEventListener('click', (event) => {
-                    // Prevent default checkbox behavior
                     event.preventDefault();
-                    
-                    // Toggle checkbox
                     checkbox.checked = !checkbox.checked;
-                    
-                    // Toggle selected class
                     fileDiv.classList.toggle('selected');
-                    
-                    // Send message to extension
                     vscode.postMessage({
                         type: 'toggleFile',
                         path: file.path
@@ -116,6 +125,12 @@
                 });
                 
                 fileList.appendChild(fileDiv);
+            });
+        }
+
+        function applyChanges() {
+            vscode.postMessage({
+                type: 'applyChanges'
             });
         }
     </script>
