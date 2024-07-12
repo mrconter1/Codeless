@@ -1,4 +1,3 @@
-// codelessTreeDataProvider.ts
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { FileItem } from './fileItem';
@@ -22,7 +21,7 @@ export class CodelessTreeDataProvider implements vscode.TreeDataProvider<FileIte
             return Promise.resolve([]);
         }
         if (element) {
-            return Promise.resolve([]); // For now, we're not handling subdirectories
+            return Promise.resolve([]);
         } else {
             return this.getWorkspaceFiles();
         }
@@ -41,8 +40,11 @@ export class CodelessTreeDataProvider implements vscode.TreeDataProvider<FileIte
     }
 
     toggleSelection(item: FileItem) {
-        item.toggleSelection();
-        this.refresh();
+        const existingItem = this.fileItems.find(fi => fi.resourceUri.fsPath === item.resourceUri.fsPath);
+        if (existingItem) {
+            existingItem.toggleSelection();
+            this.refresh();
+        }
     }
 
     getSelectedFiles(): FileItem[] {

@@ -1,7 +1,6 @@
-// extension.ts
 import * as vscode from 'vscode';
-import { FileItem } from './fileItem';
 import { CodelessTreeDataProvider } from './codelessTreeDataProvider';
+import { FileItem } from './fileItem';
 
 export function activate(context: vscode.ExtensionContext) {
     const treeDataProvider = new CodelessTreeDataProvider();
@@ -11,12 +10,6 @@ export function activate(context: vscode.ExtensionContext) {
 
     let selectFileCommand = vscode.commands.registerCommand('codeless.selectFile', (item: FileItem) => {
         treeDataProvider.toggleSelection(item);
-    });
-
-    treeView.onDidChangeSelection(event => {
-        if (event.selection.length > 0) {
-            vscode.commands.executeCommand('codeless.selectFile', event.selection[0]);
-        }
     });
 
     let processFilesCommand = vscode.commands.registerCommand('codeless.processFiles', () => {
