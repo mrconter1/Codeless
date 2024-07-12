@@ -1,56 +1,46 @@
+// codelessTreeDataProvider.ts
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { FileItem, RootItem } from './fileItem';
 
-export class CodelessTreeDataProvider implements vscode.TreeDataProvider<FileItem | RootItem> {
-    private _onDidChangeTreeData: vscode.EventEmitter<FileItem | RootItem | undefined | null | void> = new vscode.EventEmitter<FileItem | RootItem | undefined | null | void>();
-    readonly onDidChangeTreeData: vscode.Event<FileItem | RootItem | undefined | null | void> = this._onDidChangeTreeData.event;
+export class CodelessTreeDataProvider implements vscode.TreeDataProvider<never> {
+    private _onDidChangeTreeData: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
+    readonly onDidChangeTreeData: vscode.Event<void> = this._onDidChangeTreeData.event;
 
-    private rootItem: RootItem = new RootItem();
-    private fileItems: FileItem[] = [];
+    private fileItems: Array<{ path: string, name: string, selected: boolean }> = [];
 
     refresh(): void {
         this._onDidChangeTreeData.fire();
     }
 
-    getTreeItem(element: FileItem | RootItem): vscode.TreeItem {
-        return element;
+    getTreeItem(): never {
+        throw new Error('Method not implemented.');
     }
 
-    getChildren(element?: FileItem | RootItem): Thenable<(FileItem | RootItem)[]> {
-        if (!vscode.workspace.workspaceFolders) {
-            return Promise.resolve([]);
-        }
-        if (!element) {
-            return Promise.resolve([this.rootItem]);
-        } else if (element === this.rootItem) {
-            return this.getWorkspaceFiles();
-        } else {
-            return Promise.resolve([]);
-        }
+    getChildren(): never[] {
+        return [];
     }
 
-    private async getWorkspaceFiles(): Promise<FileItem[]> {
+    async getFiles(): Promise<Array<{ path: string, name: string, selected: boolean }>> {
         if (this.fileItems.length === 0) {
             const files = await vscode.workspace.findFiles('**/*', '**/node_modules/**');
-            this.fileItems = files.map(file => new FileItem(
-                path.basename(file.fsPath),
-                vscode.TreeItemCollapsibleState.None,
-                file
-            ));
+            this.fileItems = files.map(file => ({
+                path: file.fsPath,
+                name: path.basename(file.fsPath),
+                selected: false
+            }));
         }
         return this.fileItems;
     }
 
-    toggleSelection(item: FileItem) {
-        const existingItem = this.fileItems.find(fi => fi.resourceUri.fsPath === item.resourceUri.fsPath);
-        if (existingItem) {
-            existingItem.toggleSelection();
+    toggleSelection(path: string) {
+        const item = this.fileItems.find(fi => fi.path === path);
+        if (item) {
+            item.selected = !item.selected;
             this.refresh();
         }
     }
 
-    getSelectedFiles(): FileItem[] {
+    getSelectedFiles(): Array<{ path: string, name: string }> {
         return this.fileItems.filter(item => item.selected);
     }
 }

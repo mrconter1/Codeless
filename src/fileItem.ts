@@ -32,8 +32,30 @@ export class FileItem extends vscode.TreeItem {
 }
 
 export class RootItem extends vscode.TreeItem {
-    constructor() {
-        super("Files In Context", vscode.TreeItemCollapsibleState.Expanded);
+    constructor(label: string) {
+        super(label, vscode.TreeItemCollapsibleState.Expanded);
         this.contextValue = 'root';
+    }
+}
+
+export class InstructionItem extends vscode.TreeItem {
+    constructor(private instruction: string) {
+        super("Instruction", vscode.TreeItemCollapsibleState.None);
+        this.description = instruction || "Click to add instruction";
+        this.contextValue = 'instruction';
+        this.command = {
+            title: "Edit Instruction",
+            command: "codeless.editInstruction",
+            arguments: [this]
+        };
+    }
+
+    updateInstruction(newInstruction: string) {
+        this.instruction = newInstruction;
+        this.description = newInstruction || "Click to add instruction";
+    }
+
+    getInstruction(): string {
+        return this.instruction;
     }
 }
