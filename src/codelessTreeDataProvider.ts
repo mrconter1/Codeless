@@ -1,29 +1,32 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { FileItem } from './fileItem';
+import { FileItem, RootItem } from './fileItem';
 
-export class CodelessTreeDataProvider implements vscode.TreeDataProvider<FileItem> {
-    private _onDidChangeTreeData: vscode.EventEmitter<FileItem | undefined | null | void> = new vscode.EventEmitter<FileItem | undefined | null | void>();
-    readonly onDidChangeTreeData: vscode.Event<FileItem | undefined | null | void> = this._onDidChangeTreeData.event;
+export class CodelessTreeDataProvider implements vscode.TreeDataProvider<FileItem | RootItem> {
+    private _onDidChangeTreeData: vscode.EventEmitter<FileItem | RootItem | undefined | null | void> = new vscode.EventEmitter<FileItem | RootItem | undefined | null | void>();
+    readonly onDidChangeTreeData: vscode.Event<FileItem | RootItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
+    private rootItem: RootItem = new RootItem();
     private fileItems: FileItem[] = [];
 
     refresh(): void {
         this._onDidChangeTreeData.fire();
     }
 
-    getTreeItem(element: FileItem): vscode.TreeItem {
+    getTreeItem(element: FileItem | RootItem): vscode.TreeItem {
         return element;
     }
 
-    getChildren(element?: FileItem): Thenable<FileItem[]> {
+    getChildren(element?: FileItem | RootItem): Thenable<(FileItem | RootItem)[]> {
         if (!vscode.workspace.workspaceFolders) {
             return Promise.resolve([]);
         }
-        if (element) {
-            return Promise.resolve([]);
-        } else {
+        if (!element) {
+            return Promise.resolve([this.rootItem]);
+        } else if (element === this.rootItem) {
             return this.getWorkspaceFiles();
+        } else {
+            return Promise.resolve([]);
         }
     }
 

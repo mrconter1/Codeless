@@ -30,3 +30,10 @@ export class FileItem extends vscode.TreeItem {
         this.updateIconPath();
     }
 }
+
+export class RootItem extends vscode.TreeItem {
+    constructor() {
+        super("Files In Context", vscode.TreeItemCollapsibleState.Expanded);
+        this.contextValue = 'root';
+    }
+}
