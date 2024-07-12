@@ -1,3 +1,4 @@
+// codelessTreeDataProvider.ts
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { FileItem } from './fileItem';
@@ -5,6 +6,8 @@ import { FileItem } from './fileItem';
 export class CodelessTreeDataProvider implements vscode.TreeDataProvider<FileItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<FileItem | undefined | null | void> = new vscode.EventEmitter<FileItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<FileItem | undefined | null | void> = this._onDidChangeTreeData.event;
+
+    private fileItems: FileItem[] = [];
 
     refresh(): void {
         this._onDidChangeTreeData.fire();
@@ -18,7 +21,6 @@ export class CodelessTreeDataProvider implements vscode.TreeDataProvider<FileIte
         if (!vscode.workspace.workspaceFolders) {
             return Promise.resolve([]);
         }
-
         if (element) {
             return Promise.resolve([]); // For now, we're not handling subdirectories
         } else {
@@ -27,11 +29,23 @@ export class CodelessTreeDataProvider implements vscode.TreeDataProvider<FileIte
     }
 
     private async getWorkspaceFiles(): Promise<FileItem[]> {
-        const files = await vscode.workspace.findFiles('**/*', '**/node_modules/**');
-        return files.map(file => new FileItem(
-            path.basename(file.fsPath),
-            vscode.TreeItemCollapsibleState.None,
-            file
-        ));
+        if (this.fileItems.length === 0) {
+            const files = await vscode.workspace.findFiles('**/*', '**/node_modules/**');
+            this.fileItems = files.map(file => new FileItem(
+                path.basename(file.fsPath),
+                vscode.TreeItemCollapsibleState.None,
+                file
+            ));
+        }
+        return this.fileItems;
+    }
+
+    toggleSelection(item: FileItem) {
+        item.toggleSelection();
+        this.refresh();
+    }
+
+    getSelectedFiles(): FileItem[] {
+        return this.fileItems.filter(item => item.selected);
     }
 }

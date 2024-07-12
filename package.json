@@ -32,6 +32,10 @@
         "command": "codeless.refreshFileList",
         "title": "Refresh File List",
         "category": "Codeless"
+      },
+      {
+        "command": "codeless.selectFile",
+        "title": "Select/Deselect File"
       }
     ],
     "menus": {
