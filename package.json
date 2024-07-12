@@ -1,0 +1,63 @@
+{
+  "name": "codeless",
+  "displayName": "Codeless",
+  "description": "Process files without writing code",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:codelessExplorer"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "views": {
+      "activitybar": [
+        {
+          "id": "codelessExplorer",
+          "name": "Codeless Files"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "codeless.processFiles",
+        "title": "Process Files",
+        "category": "Codeless"
+      },
+      {
+        "command": "codeless.refreshFileList",
+        "title": "Refresh File List",
+        "category": "Codeless"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "codeless.refreshFileList",
+          "when": "view == codelessExplorer",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.60.0",
+    "@types/node": "^14.x.x",
+    "@typescript-eslint/eslint-plugin": "^4.x.x",
+    "@typescript-eslint/parser": "^4.x.x",
+    "eslint": "^7.x.x",
+    "typescript": "^4.x.x"
+  }
+}
