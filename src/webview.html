@@ -11,6 +11,7 @@
             color: var(--vscode-foreground);
             background-color: var(--vscode-editor-background);
             padding: 10px;
+            margin: 0;
         }
         h3 {
             margin-bottom: 10px;
@@ -22,8 +23,9 @@
             background-color: var(--vscode-input-background);
             color: var(--vscode-input-foreground);
             border: 1px solid var(--vscode-input-border);
-            padding: 5px;
-            resize: vertical;
+            padding: 8px 16px;
+            box-sizing: border-box; 
+            resize: none;
         }
         #fileList {
             margin-top: 15px;
