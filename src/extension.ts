@@ -1,5 +1,3 @@
-
-// extension.ts
 import * as vscode from 'vscode';
 import { CodelessTreeDataProvider } from './codelessTreeDataProvider';
 import { CodelessViewProvider } from './codelessViewProvider';
