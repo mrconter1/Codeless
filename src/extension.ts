@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import OpenAI from 'openai'; // Import OpenAI
 import { CodelessTreeDataProvider } from './codelessTreeDataProvider';
 import { CodelessViewProvider } from './codelessViewProvider';
 
@@ -27,10 +28,20 @@ export function activate(context: vscode.ExtensionContext) {
                 const document = await vscode.workspace.openTextDocument(file.path);
                 return `\`\`\`${file.name}\n${document.getText()}\n\`\`\``;
             }));
-            const prompt = content.join('\n\n');
             const finalPrompt = `${content.join('\n\n')}\n\nPlease take the above files into consideration and try to follow the instruction. **Only** write out the files that need to be modified and make sure to **always** write out the complete file (if it has modifications). Also, write the file(s) content out in the same format.\n\nInstruction:\n${instruction}`;
-            await vscode.env.clipboard.writeText(finalPrompt);
-            vscode.window.showInformationMessage(`Prompt copied to clipboard:\n${finalPrompt}`);
+
+            try {
+                const response = await callOpenAI(finalPrompt);
+                const modelResponse = response.choices[0]?.message?.content?.trim() ?? '';
+                if (modelResponse) {
+                    await vscode.env.clipboard.writeText(modelResponse);
+                    vscode.window.showInformationMessage(`Model response copied to clipboard:\n${modelResponse}`);
+                } else {
+                    vscode.window.showWarningMessage('Received an empty response from the model.');
+                }
+            } catch (error) {
+                vscode.window.showErrorMessage(`Failed to get response from OpenAI: ${error}`);
+            }
         } else {
             vscode.window.showWarningMessage("Please enter an instruction before processing files.");
         }
@@ -41,6 +52,19 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     context.subscriptions.push(toggleFileCommand, updateInstructionCommand, processFilesCommand, refreshFileListCommand);
+}
+
+async function callOpenAI(prompt: string) {
+    const openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY, // Ensure you set your OpenAI API key in the environment variables
+    });
+
+    const response = await openai.chat.completions.create({
+        model: 'gpt-4',
+        messages: [{ role: 'user', content: prompt }],
+    });
+
+    return response;
 }
 
 export function deactivate() {}
