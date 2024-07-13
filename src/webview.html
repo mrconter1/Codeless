@@ -44,7 +44,7 @@
         }
         .file.selected {
             background-color: var(--vscode-list-activeSelectionBackground);
-            color: var(--vscode-list-activeSelectionForeground);
+            color: var (--vscode-list-activeSelectionForeground);
         }
         .file input {
             margin-right: 8px;
@@ -63,9 +63,36 @@
             border-radius: 4px;
             cursor: pointer;
             transition: background-color 0.3s ease;
+            position: relative;
         }
         button:hover {
             background-color: var(--vscode-button-hoverBackground);
+        }
+        button.loading {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        button.loading .spinner {
+            display: inline-block;
+        }
+        .spinner {
+            display: none;
+            position: absolute;
+            right: 16px;
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top-color: var(--vscode-button-foreground);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
@@ -76,14 +103,21 @@
     <h3>Instruction</h3>
     <textarea id="instruction" rows="4" placeholder="Enter instructions here..."></textarea>
 
-    <button onclick="applyChanges()">Apply</button>
+    <button id="applyButton" onclick="applyChanges()">Apply
+        <div class="spinner"></div>
+    </button>
 
     <script>
         const vscode = acquireVsCodeApi();
         const instructionTextarea = document.getElementById('instruction');
         const fileList = document.getElementById('fileList');
+        const applyButton = document.getElementById('applyButton');
 
         instructionTextarea.addEventListener('input', () => {
+            const state = vscode.getState() || {};
+            state.instruction = instructionTextarea.value;
+            vscode.setState(state);
+
             vscode.postMessage({
                 type: 'instruction',
                 value: instructionTextarea.value
@@ -102,6 +136,9 @@
             switch (message.type) {
                 case 'updateFiles':
                     updateFileList(message.files);
+                    break;
+                case 'setLoading':
+                    setLoadingState(message.loading);
                     break;
             }
         });
@@ -128,6 +165,9 @@
                     event.preventDefault();
                     checkbox.checked = !checkbox.checked;
                     fileDiv.classList.toggle('selected');
+                    const state = vscode.getState() || {};
+                    state.files = files;
+                    vscode.setState(state);
                     vscode.postMessage({
                         type: 'toggleFile',
                         path: file.path
@@ -136,6 +176,10 @@
                 
                 fileList.appendChild(fileDiv);
             });
+
+            const state = vscode.getState() || {};
+            state.files = files;
+            vscode.setState(state);
         }
 
         function applyChanges() {
@@ -143,6 +187,29 @@
                 type: 'applyChanges'
             });
         }
+
+        function setLoadingState(isLoading) {
+            if (isLoading) {
+                applyButton.classList.add('loading');
+                applyButton.disabled = true;
+            } else {
+                applyButton.classList.remove('loading');
+                applyButton.disabled = false;
+            }
+        }
+
+        // Restore state when the webview is reloaded
+        (function restoreState() {
+            const state = vscode.getState();
+            if (state) {
+                if (state.files) {
+                    updateFileList(state.files);
+                }
+                if (state.instruction) {
+                    instructionTextarea.value = state.instruction;
+                }
+            }
+        })();
     </script>
 </body>
 </html>
