@@ -35,6 +35,9 @@ export class CodelessViewProvider implements vscode.WebviewViewProvider {
                 case 'toggleFile':
                     vscode.commands.executeCommand('codeless.toggleFile', data.path);
                     break;
+                case 'applyChanges':
+                    vscode.commands.executeCommand('codeless.processFiles');
+                    break;
             }
         });
 

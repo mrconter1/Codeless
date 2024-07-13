@@ -20,11 +20,16 @@ export function activate(context: vscode.ExtensionContext) {
         instruction = value;
     });
 
-    let processFilesCommand = vscode.commands.registerCommand('codeless.processFiles', () => {
+    let processFilesCommand = vscode.commands.registerCommand('codeless.processFiles', async () => {
         const selectedFiles = treeDataProvider.getSelectedFiles();
         if (instruction) {
-            vscode.window.showInformationMessage(`Processing ${selectedFiles.length} files with instruction: ${instruction}`);
-            // Implement your file processing logic here
+            const content = await Promise.all(selectedFiles.map(async file => {
+                const document = await vscode.workspace.openTextDocument(file.path);
+                return `\`\`\`${file.name}\n${document.getText()}\n\`\`\``;
+            }));
+            const prompt = content.join('\n\n');
+            vscode.env.clipboard.writeText(prompt);
+            vscode.window.showInformationMessage(`Prompt copied to clipboard:\n${prompt}`);
         } else {
             vscode.window.showWarningMessage("Please enter an instruction before processing files.");
         }
