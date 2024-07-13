@@ -24,7 +24,7 @@
             color: var(--vscode-input-foreground);
             border: 1px solid var(--vscode-input-border);
             padding: 8px 16px;
-            box-sizing: border-box; 
+            box-sizing: border-box;
             resize: none;
         }
         #fileList {
@@ -44,7 +44,7 @@
         }
         .file.selected {
             background-color: var(--vscode-list-activeSelectionBackground);
-            color: var (--vscode-list-activeSelectionForeground);
+            color: var(--vscode-list-activeSelectionForeground);
         }
         .file input {
             margin-right: 8px;
@@ -79,6 +79,8 @@
             display: none;
             position: absolute;
             right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
             width: 20px;
             height: 20px;
             border: 2px solid transparent;
@@ -186,15 +188,18 @@
             vscode.postMessage({
                 type: 'applyChanges'
             });
+            setLoadingState(true);
         }
 
         function setLoadingState(isLoading) {
             if (isLoading) {
                 applyButton.classList.add('loading');
                 applyButton.disabled = true;
+                applyButton.querySelector('.spinner').style.display = 'inline-block';
             } else {
                 applyButton.classList.remove('loading');
                 applyButton.disabled = false;
+                applyButton.querySelector('.spinner').style.display = 'none';
             }
         }
 

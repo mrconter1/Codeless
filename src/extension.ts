@@ -30,6 +30,8 @@ export function activate(context: vscode.ExtensionContext) {
             }));
             const finalPrompt = `${content.join('\n\n')}\n\nPlease take the above files into consideration and try to follow the instruction. **Only** write out the files that need to be modified and make sure to **always** write out the complete file (if it has modifications). Also, write the file(s) content out in the same format.\n\nInstruction:\n${instruction}`;
 
+            viewProvider.postMessage({ type: 'setLoading', loading: true });
+
             try {
                 const response = await callOpenAI(finalPrompt);
                 const modelResponse = response.choices[0]?.message?.content?.trim() ?? '';
@@ -42,6 +44,8 @@ export function activate(context: vscode.ExtensionContext) {
                 }
             } catch (error) {
                 vscode.window.showErrorMessage(`Failed to get response from OpenAI: ${error}`);
+            } finally {
+                viewProvider.postMessage({ type: 'setLoading', loading: false });
             }
         } else {
             vscode.window.showWarningMessage("Please enter an instruction before processing files.");
@@ -61,7 +65,7 @@ async function callOpenAI(prompt: string) {
     });
 
     const response = await openai.chat.completions.create({
-        model: 'gpt-4o',
+        model: 'gpt-4',
         messages: [{ role: 'user', content: prompt }],
     });
 

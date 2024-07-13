@@ -3,7 +3,6 @@ import { CodelessTreeDataProvider } from './codelessTreeDataProvider';
 
 export class CodelessViewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'codelessExplorer';
-
     private _view?: vscode.WebviewView;
 
     constructor(
@@ -47,6 +46,10 @@ export class CodelessViewProvider implements vscode.WebviewViewProvider {
 
         // Initialize the file list
         await this.updateFileList();
+    }
+
+    public postMessage(message: any) {
+        this._view?.webview.postMessage(message);
     }
 
     private async updateFileList() {
