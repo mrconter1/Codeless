@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import OpenAI from 'openai'; // Import OpenAI
+import OpenAI from 'openai';
 import { CodelessTreeDataProvider } from './codelessTreeDataProvider';
 import { CodelessViewProvider } from './codelessViewProvider';
 
@@ -34,8 +34,9 @@ export function activate(context: vscode.ExtensionContext) {
                 const response = await callOpenAI(finalPrompt);
                 const modelResponse = response.choices[0]?.message?.content?.trim() ?? '';
                 if (modelResponse) {
-                    await vscode.env.clipboard.writeText(modelResponse);
-                    vscode.window.showInformationMessage(`Model response copied to clipboard:\n${modelResponse}`);
+                    console.log('Model Response:', modelResponse); // Logging the model response
+                    await updateFilesWithResponse(modelResponse, selectedFiles);
+                    vscode.window.showInformationMessage('Files updated with the model response.');
                 } else {
                     vscode.window.showWarningMessage('Received an empty response from the model.');
                 }
@@ -56,7 +57,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 async function callOpenAI(prompt: string) {
     const openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY, // Ensure you set your OpenAI API key in the environment variables
+        apiKey: process.env.OPENAI_API_KEY,
     });
 
     const response = await openai.chat.completions.create({
@@ -65,6 +66,47 @@ async function callOpenAI(prompt: string) {
     });
 
     return response;
+}
+
+async function updateFilesWithResponse(modelResponse: string, selectedFiles: Array<{ path: string, name: string }>) {
+    const fileContents = parseModelResponse(modelResponse);
+
+    for (const file of selectedFiles) {
+        const newContent = fileContents[file.name];
+        if (newContent) {
+            const document = await vscode.workspace.openTextDocument(file.path);
+            const edit = new vscode.WorkspaceEdit();
+            const fullRange = new vscode.Range(
+                document.positionAt(0),
+                document.positionAt(document.getText().length)
+            );
+            edit.replace(document.uri, fullRange, newContent);
+            const success = await vscode.workspace.applyEdit(edit);
+            if (success) {
+                await document.save();
+                console.log(`File ${file.name} updated successfully.`);
+            } else {
+                console.error(`Failed to apply edit to ${file.name}`);
+            }
+        } else {
+            console.warn(`No new content found for ${file.name}`);
+        }
+    }
+}
+
+function parseModelResponse(modelResponse: string): { [key: string]: string } {
+    const fileContents: { [key: string]: string } = {};
+    const regex = /```([^`\n]+)\n([\s\S]*?)\n```/g;
+    let match;
+
+    while ((match = regex.exec(modelResponse)) !== null) {
+        const fileName = match[1].trim();
+        const content = match[2].trim();
+        console.log(`Parsed file: ${fileName}, content length: ${content.length}`); // Debugging log
+        fileContents[fileName] = content;
+    }
+
+    return fileContents;
 }
 
 export function deactivate() {}
