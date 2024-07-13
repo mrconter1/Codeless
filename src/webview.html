@@ -191,14 +191,23 @@
 
         function applyChanges() {
             vscode.postMessage({
-                type: 'applyChanges'
+                type: 'applyChanges',
+                instruction: instructionTextarea.value
             });
             setLoadingState(true);
+            clearInstructionTextarea();
         }
 
         function setLoadingState(isLoading) {
             applyButton.disabled = isLoading;
             loadingIndicator.classList.toggle('visible', isLoading);
+        }
+
+        function clearInstructionTextarea() {
+            instructionTextarea.value = '';
+            const state = vscode.getState() || {};
+            state.instruction = '';
+            vscode.setState(state);
         }
 
         // Restore state when the webview is reloaded
