@@ -28,8 +28,9 @@ export function activate(context: vscode.ExtensionContext) {
                 return `\`\`\`${file.name}\n${document.getText()}\n\`\`\``;
             }));
             const prompt = content.join('\n\n');
-            vscode.env.clipboard.writeText(prompt);
-            vscode.window.showInformationMessage(`Prompt copied to clipboard:\n${prompt}`);
+            const finalPrompt = `${content.join('\n\n')}\n\nPlease take the above files into consideration and try to follow the instruction. **Only** write out the files that need to be modified and make sure to **always** write out the complete file (if it has modifications). Also, write the file(s) content out in the same format.\n\nInstruction:\n${instruction}`;
+            await vscode.env.clipboard.writeText(finalPrompt);
+            vscode.window.showInformationMessage(`Prompt copied to clipboard:\n${finalPrompt}`);
         } else {
             vscode.window.showWarningMessage("Please enter an instruction before processing files.");
         }
