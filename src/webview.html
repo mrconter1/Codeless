@@ -90,6 +90,13 @@
             });
         });
 
+        instructionTextarea.addEventListener('keydown', (event) => {
+            if (event.shiftKey && event.key === 'Enter') {
+                event.preventDefault();
+                applyChanges();
+            }
+        });
+
         window.addEventListener('message', event => {
             const message = event.data;
             switch (message.type) {
