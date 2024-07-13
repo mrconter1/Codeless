@@ -70,6 +70,7 @@ async function callOpenAI(prompt: string) {
 
 async function updateFilesWithResponse(modelResponse: string, selectedFiles: Array<{ path: string, name: string }>) {
     const fileContents = parseModelResponse(modelResponse);
+    console.log('Parsed File Contents:', fileContents); // Logging parsed file contents
 
     for (const file of selectedFiles) {
         const newContent = fileContents[file.name];
