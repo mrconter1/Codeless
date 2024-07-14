@@ -13,6 +13,17 @@
         "kind": "build",
         "isDefault": true
       }
+    },
+    {
+      "type": "shell",
+      "label": "Update Extension",
+      "command": "${workspaceFolder}/update-extension.bat",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "group": "build"
     }
   ]
 }
