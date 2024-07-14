@@ -1,62 +1,57 @@
 import * as vscode from 'vscode';
 import OpenAI from 'openai';
-import { CodelessTreeDataProvider } from './codelessTreeDataProvider';
-import { CodelessViewProvider } from './codelessViewProvider';
 
 export function activate(context: vscode.ExtensionContext) {
-    const treeDataProvider = new CodelessTreeDataProvider();
-    const viewProvider = new CodelessViewProvider(context.extensionUri, treeDataProvider);
+    console.log('Codeless extension is now active!');
 
-    context.subscriptions.push(
-        vscode.window.registerWebviewViewProvider(CodelessViewProvider.viewType, viewProvider)
-    );
+    let processCommand = vscode.commands.registerCommand('codeless.process', async () => {
+        const instruction = await vscode.window.showInputBox({
+            prompt: "Enter your instruction",
+            placeHolder: "e.g., Refactor the code to use async/await"
+        });
 
-    let instruction = '';
+        if (!instruction) {
+            vscode.window.showWarningMessage("No instruction provided.");
+            return;
+        }
 
-    let toggleFileCommand = vscode.commands.registerCommand('codeless.toggleFile', (path: string) => {
-        treeDataProvider.toggleSelection(path);
-    });
+        const openEditors = vscode.window.visibleTextEditors;
+        if (openEditors.length === 0) {
+            vscode.window.showWarningMessage("No open files to process.");
+            return;
+        }
 
-    let updateInstructionCommand = vscode.commands.registerCommand('codeless.updateInstruction', (value: string) => {
-        instruction = value;
-    });
+        const files = openEditors.map(editor => ({
+            path: editor.document.uri.fsPath,
+            name: vscode.workspace.asRelativePath(editor.document.uri),
+            content: editor.document.getText()
+        }));
 
-    let processFilesCommand = vscode.commands.registerCommand('codeless.processFiles', async () => {
-        const selectedFiles = treeDataProvider.getSelectedFiles();
-        if (instruction) {
-            const content = await Promise.all(selectedFiles.map(async file => {
-                const document = await vscode.workspace.openTextDocument(file.path);
-                return `\`\`\`${file.name}\n${document.getText()}\n\`\`\``;
-            }));
-            const finalPrompt = `${content.join('\n\n')}\n\nPlease take the above files into consideration and try to follow the instruction. **Only** write out the files that need to be modified and make sure to **always** write out the complete file (if it has modifications). Also, write the file(s) content out in the same format.\n\nInstruction:\n${instruction}`;
+        const content = files.map(file => `\`\`\`${file.name}\n${file.content}\n\`\`\``).join('\n\n');
+        const finalPrompt = `${content}\n\nPlease take the above files into consideration and try to follow the instruction. **Only** write out the files that need to be modified and make sure to **always** write out the complete file (if it has modifications). Also, write the file(s) content out in the same format.\n\nInstruction:\n${instruction}`;
 
-            viewProvider.postMessage({ type: 'setLoading', loading: true });
-
+        vscode.window.withProgress({
+            location: vscode.ProgressLocation.Notification,
+            title: "Processing files...",
+            cancellable: false
+        }, async (progress) => {
             try {
                 const response = await callOpenAI(finalPrompt);
                 const modelResponse = response.choices[0]?.message?.content?.trim() ?? '';
                 if (modelResponse) {
-                    console.log('Model Response:', modelResponse); // Logging the model response
-                    await updateFilesWithResponse(modelResponse, selectedFiles);
+                    console.log('Model Response:', modelResponse);
+                    await updateFilesWithResponse(modelResponse, files);
                     vscode.window.showInformationMessage('Files updated with the model response.');
                 } else {
                     vscode.window.showWarningMessage('Received an empty response from the model.');
                 }
             } catch (error) {
                 vscode.window.showErrorMessage(`Failed to get response from OpenAI: ${error}`);
-            } finally {
-                viewProvider.postMessage({ type: 'setLoading', loading: false });
             }
-        } else {
-            vscode.window.showWarningMessage("Please enter an instruction before processing files.");
-        }
+        });
     });
 
-    let refreshFileListCommand = vscode.commands.registerCommand('codeless.refreshFileList', () => {
-        treeDataProvider.refresh();
-    });
-
-    context.subscriptions.push(toggleFileCommand, updateInstructionCommand, processFilesCommand, refreshFileListCommand);
+    context.subscriptions.push(processCommand);
 }
 
 async function callOpenAI(prompt: string) {
@@ -65,18 +60,18 @@ async function callOpenAI(prompt: string) {
     });
 
     const response = await openai.chat.completions.create({
-        model: 'gpt-4',
+        model: 'gpt-4o',
         messages: [{ role: 'user', content: prompt }],
     });
 
     return response;
 }
 
-async function updateFilesWithResponse(modelResponse: string, selectedFiles: Array<{ path: string, name: string }>) {
+async function updateFilesWithResponse(modelResponse: string, files: Array<{ path: string, name: string, content: string }>) {
     const fileContents = parseModelResponse(modelResponse);
-    console.log('Parsed File Contents:', fileContents); // Logging parsed file contents
+    console.log('Parsed File Contents:', fileContents);
 
-    for (const file of selectedFiles) {
+    for (const file of files) {
         const newContent = fileContents[file.name];
         if (newContent) {
             const document = await vscode.workspace.openTextDocument(file.path);
@@ -93,8 +88,6 @@ async function updateFilesWithResponse(modelResponse: string, selectedFiles: Arr
             } else {
                 console.error(`Failed to apply edit to ${file.name}`);
             }
-        } else {
-            console.warn(`No new content found for ${file.name}`);
         }
     }
 }
@@ -107,7 +100,7 @@ function parseModelResponse(modelResponse: string): { [key: string]: string } {
     while ((match = regex.exec(modelResponse)) !== null) {
         const fileName = match[1].trim();
         const content = match[2].trim();
-        console.log(`Parsed file: ${fileName}, content length: ${content.length}`); // Debugging log
+        console.log(`Parsed file: ${fileName}, content length: ${content.length}`);
         fileContents[fileName] = content;
     }
 

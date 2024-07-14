@@ -10,52 +10,24 @@
     "Other"
   ],
   "activationEvents": [
-    "onView:codelessExplorer"
   ],
   "main": "./out/extension.js",
   "contributes": {
-    "views": {
-      "codeless-explorer": [
-        {
-          "type": "webview",
-          "id": "codelessExplorer",
-          "name": "Codeless Explorer"
-        }
-      ]
-    },
     "commands": [
       {
-        "command": "codeless.updateInstruction",
-        "title": "Update Instruction"
-      },
-      {
-        "command": "codeless.processFiles",
-        "title": "Process Files",
+        "command": "codeless.process",
+        "title": "Process Open Files",
         "category": "Codeless"
-      },
-      {
-        "command": "codeless.refreshFileList",
-        "title": "Refresh File List",
-        "category": "Codeless"
-      },
-      {
-        "command": "codeless.selectFile",
-        "title": "Select/Deselect File"
-      },
-      {
-        "command": "codeless.toggleFile",
-        "title": "Toggle File Selection"
       }
     ],
-    "menus": {
-      "view/title": [
-        {
-          "command": "codeless.refreshFileList",
-          "when": "view == codelessExplorer",
-          "group": "navigation"
-        }
-      ]
+    "keybindings": [
+    {
+      "command": "codeless.process",
+      "key": "alt+e",
+      "mac": "alt+e",
+      "when": "editorTextFocus"
     }
+  ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -74,7 +46,6 @@
     "typescript": "^4.x.x"
   },
   "dependencies": {
-    "axios": "^1.7.2",
     "openai": "^4.52.7"
   }
 }
