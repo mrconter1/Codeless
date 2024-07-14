@@ -16,14 +16,15 @@
     },
     {
       "type": "shell",
-      "label": "Update Extension",
-      "command": "${workspaceFolder}/update-extension.bat",
-      "problemMatcher": [],
+      "command": "node",
+      "args": ["build-and-install.js"],
+      "group": "build",
       "presentation": {
         "reveal": "always",
         "panel": "new"
       },
-      "group": "build"
+      "label": "Build and Install Extension",
+      "problemMatcher": []
     }
   ]
 }
