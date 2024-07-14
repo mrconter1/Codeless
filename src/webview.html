@@ -132,7 +132,7 @@
         });
 
         instructionTextarea.addEventListener('keydown', (event) => {
-            if (event.shiftKey && event.key === 'Enter') {
+            if (event.ctrlKey && event.key === 'Enter') {
                 event.preventDefault();
                 applyChanges();
             }
