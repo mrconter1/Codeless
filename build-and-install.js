@@ -39,7 +39,8 @@ async function buildAndInstall() {
         console.log(`Installing ${latestVsix}...`);
         await runCommand(`code --install-extension ${latestVsix}`);
 
-        console.log('Extension built and installed successfully. Please reload VS Code.');
+        console.log('Extension built and installed successfully.');
+        console.log('Please reload your VS Code window to see the changes.');
     } catch (error) {
         console.error('An error occurred:', error.message);
         process.exit(1);
